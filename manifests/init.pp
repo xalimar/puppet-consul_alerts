@@ -50,20 +50,16 @@
 class consul_alerts (
   $enabled      = true,
   $binary_path  = '/usr/local/bin',
-  $version      = '0.2.0',
-  $repo_url     = 'https://github.com/AcalephStorage/consul-alerts/releases/download',
-  $arch         = $::architecture,
-  $default_url  = true,
-  $custom_url   = undef,
+  $version      = 'v0.2.0',
+  $repo_url     = 'https://github.com/AcalephStorage/consul-alerts/archive/',
+  $arch         = $::achitecture,
   $alert_addr   = '127.0.0.1:9000',
   $consul_url   = '127.0.0.1:8500',
   $data_center  = 'dc1',
   $watch_events = true,
   $watch_checks = true,
 ) {
-  #Variable validations
   validate_bool($enabled)
-  validate_bool($default_url)
   validate_bool($watch_events)
   validate_bool($watch_checks)
   validate_absolute_path($binary_path)
@@ -74,18 +70,11 @@ class consul_alerts (
   validate_string($consul_url)
   validate_string($data_center)
 
-  #Build the full download URL
-  $filename     = "consul-alerts-${version}-linux-${arch}.tar"
-  $download_url = $default_url ? {
-    false   => $custom_url,
-    default => "${repo_url}/v${version}/${filename}",
-  }
+  $download_url = "${repo_url}${version}.tar.gz"
 
-  #Download consul-alerts binary
   include ::wget
-
   exec { 'download_consul_alerts':
-    command => "wget -q --no-check-certificate $download_url -O /var/tmp/${filename}",
+    command => "wget -q --no-check-certificate ${download_url} -O /var/tmp/${filename}",
     path    => '/usr/bin:/usr/local/bin:/bin',
     unless  => "test -s /var/tmp/${filename}",
     notify  => Exec['extract_consul_alerts'],
