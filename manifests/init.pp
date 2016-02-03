@@ -51,7 +51,7 @@ class consul_alerts (
   $enabled      = true,
   $binary_path  = '/usr/local/bin',
   $version      = 'v0.2.0',
-  $repo_url     = 'https://github.com/AcalephStorage/consul-alerts/archive/',
+  $repo_url     = 'https://bintray.com/artifact/download/darkcrux/generic/consul-alerts-latest-linux-amd64.tar',
   $arch         = $::achitecture,
   $alert_addr   = '127.0.0.1:9000',
   $consul_url   = '127.0.0.1:8500',
@@ -74,8 +74,12 @@ class consul_alerts (
   validate_string($user)
   validate_string($group)
 
-  $download_url = "${repo_url}${version}.tar.gz"
-
+  # As the link stores the lates without concern for version I am not 
+  # using the value at this time. default provided is for x86_64 
+  # TODO: make this customizable, but is limited to the way the packages
+  # are made available
+  $download_url = "${repo_url}"
+  $filename = "consul_latest.tar"
   include ::wget
   exec { 'download_consul_alerts':
     command => "wget -q --no-check-certificate ${download_url} -O /var/tmp/${filename}",
@@ -84,13 +88,11 @@ class consul_alerts (
     notify  => Exec['extract_consul_alerts'],
   }
 
-  #Install binary
   exec { 'extract_consul_alerts':
-    command     => "tar -xf /var/tmp/${filename}",
-    cwd         => $binary_path,
-    refreshonly => true,
-    path        => ['/bin', '/sbin', '/usr/bin', '/usr/sbin'],
-    notify      => Service['consul-alerts'],
+    command => "tar -xf /var/tmp/${filename}",
+    cwd     => $binary_path,
+    path    => ['/bin', '/sbin', '/usr/bin', '/usr/sbin'],
+    notify  => Service['consul-alerts.service'],
   }
 
   #Define present/absent as true/false. Still don't understand why this isn't a builtin.
@@ -98,14 +100,14 @@ class consul_alerts (
     false   => absent,
     default => present,
   }
-  #Build init file
+  
   file { '/usr/lib/systemd/system/consul-alerts.service':
     ensure  => $file_ensure,
     content => template('consul_alerts/initfile.erb'),
     notify  => Service['consul-alerts.service'],
   }
 
-  service { 'consul-alerts':
+  service { 'consul-alerts.service':
     ensure  => $enabled,
     enable  => $enabled,
     require => [
@@ -113,5 +115,4 @@ class consul_alerts (
       File['/usr/lib/systemd/system/consul-alerts.service'],
     ],
   }
-
 }
