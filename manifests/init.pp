@@ -58,6 +58,8 @@ class consul_alerts (
   $data_center  = 'dc1',
   $watch_events = true,
   $watch_checks = true,
+  $user         = 'consul',
+  $group        = 'consul',
 ) {
   validate_bool($enabled)
   validate_bool($watch_events)
@@ -69,6 +71,8 @@ class consul_alerts (
   validate_string($alert_addr)
   validate_string($consul_url)
   validate_string($data_center)
+  validate_string($user)
+  validate_string($group)
 
   $download_url = "${repo_url}${version}.tar.gz"
 
@@ -95,10 +99,10 @@ class consul_alerts (
     default => present,
   }
   #Build init file
-  file { '/etc/init/consul-alerts.conf':
+  file { '/usr/lib/systemd/system/consul-alerts.service':
     ensure  => $file_ensure,
     content => template('consul_alerts/initfile.erb'),
-    notify  => Service['consul-alerts'],
+    notify  => Service['consul-alerts.service'],
   }
 
   service { 'consul-alerts':
@@ -106,7 +110,7 @@ class consul_alerts (
     enable  => $enabled,
     require => [
       Exec['extract_consul_alerts'],
-      File['/etc/init/consul-alerts.conf'],
+      File['/usr/lib/systemd/system/consul-alerts.service'],
     ],
   }
 
