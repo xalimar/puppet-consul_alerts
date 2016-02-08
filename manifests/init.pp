@@ -50,20 +50,18 @@
 class consul_alerts (
   $enabled      = true,
   $binary_path  = '/usr/local/bin',
-  $version      = '0.2.0',
-  $repo_url     = 'https://github.com/AcalephStorage/consul-alerts/releases/download',
-  $arch         = $::architecture,
-  $default_url  = true,
-  $custom_url   = undef,
+  $version      = 'v0.2.0',
+  $repo_url     = 'https://bintray.com/artifact/download/darkcrux/generic/consul-alerts-latest-linux-amd64.tar',
+  $arch         = $::achitecture,
   $alert_addr   = '127.0.0.1:9000',
   $consul_url   = '127.0.0.1:8500',
   $data_center  = 'dc1',
   $watch_events = true,
   $watch_checks = true,
+  $user         = 'consul',
+  $group        = 'consul',
 ) {
-  #Variable validations
   validate_bool($enabled)
-  validate_bool($default_url)
   validate_bool($watch_events)
   validate_bool($watch_checks)
   validate_absolute_path($binary_path)
@@ -73,17 +71,16 @@ class consul_alerts (
   validate_string($alert_addr)
   validate_string($consul_url)
   validate_string($data_center)
+  validate_string($user)
+  validate_string($group)
 
-  #Build the full download URL
-  $filename     = "consul-alerts-${version}-linux-${arch}.tar"
-  $download_url = $default_url ? {
-    false   => $custom_url,
-    default => "${repo_url}/v${version}/${filename}",
-  }
-
-  #Download consul-alerts binary
+  # As the link stores the lates without concern for version I am not 
+  # using the value at this time. default provided is for x86_64 
+  # TODO: make this customizable, but is limited to the way the packages
+  # are made available
+  $download_url = "${repo_url}"
+  $filename = "consul_latest.tar"
   include ::wget
-
   exec { 'download_consul_alerts':
     command => "wget -q --no-check-certificate ${download_url} -O /var/tmp/${filename}",
     path    => '/usr/bin:/usr/local/bin:/bin',
@@ -91,13 +88,11 @@ class consul_alerts (
     notify  => Exec['extract_consul_alerts'],
   }
 
-  #Install binary
   exec { 'extract_consul_alerts':
-    command     => "tar -xf /var/tmp/${filename}",
-    cwd         => $binary_path,
-    refreshonly => true,
-    path        => ['/bin', '/sbin', '/usr/bin', '/usr/sbin'],
-    notify      => Service['consul-alerts'],
+    command => "tar -xf /var/tmp/${filename}",
+    cwd     => $binary_path,
+    path    => ['/bin', '/sbin', '/usr/bin', '/usr/sbin'],
+    notify  => Service['consul-alerts.service'],
   }
 
   #Define present/absent as true/false. Still don't understand why this isn't a builtin.
@@ -105,20 +100,19 @@ class consul_alerts (
     false   => absent,
     default => present,
   }
-  #Build init file
-  file { '/etc/init/consul-alerts.conf':
+  
+  file { '/usr/lib/systemd/system/consul-alerts.service':
     ensure  => $file_ensure,
     content => template('consul_alerts/initfile.erb'),
-    notify  => Service['consul-alerts'],
+    notify  => Service['consul-alerts.service'],
   }
 
-  service { 'consul-alerts':
+  service { 'consul-alerts.service':
     ensure  => $enabled,
     enable  => $enabled,
     require => [
       Exec['extract_consul_alerts'],
-      File['/etc/init/consul-alerts.conf'],
+      File['/usr/lib/systemd/system/consul-alerts.service'],
     ],
   }
-
 }
