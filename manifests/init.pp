@@ -74,8 +74,8 @@ class consul_alerts (
   validate_string($user)
   validate_string($group)
 
-  # As the link stores the lates without concern for version I am not 
-  # using the value at this time. default provided is for x86_64 
+  # As the link stores the lates without concern for version I am not
+  # using the value at this time. default provided is for x86_64
   # TODO: make this customizable, but is limited to the way the packages
   # are made available
   $download_url = "${repo_url}"
@@ -100,8 +100,8 @@ class consul_alerts (
     false   => absent,
     default => present,
   }
-  
-  file { '/usr/lib/systemd/system/consul-alerts.service':
+
+  file { '/etc/systemd/system/consul-alerts.service':
     ensure  => $file_ensure,
     content => template('consul_alerts/initfile.erb'),
     notify  => Service['consul-alerts.service'],
@@ -112,7 +112,7 @@ class consul_alerts (
     enable  => $enabled,
     require => [
       Exec['extract_consul_alerts'],
-      File['/usr/lib/systemd/system/consul-alerts.service'],
+      File['/etc/systemd/system/consul-alerts.service'],
     ],
   }
 }
