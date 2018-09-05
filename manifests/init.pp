@@ -50,8 +50,8 @@
 class consul_alerts (
   $enabled      = true,
   $binary_path  = '/usr/local/bin',
-  $version      = 'v0.2.0',
-  $repo_url     = 'https://bintray.com/artifact/download/darkcrux/generic/consul-alerts-latest-linux-amd64.tar',
+  $version      = '0.5.0',
+  $repo_url     = 'https://github.com/AcalephStorage/consul-alerts/releases/download',
   $arch         = $::achitecture,
   $alert_addr   = '127.0.0.1:9000',
   $consul_url   = '127.0.0.1:8500',
@@ -78,7 +78,7 @@ class consul_alerts (
   # using the value at this time. default provided is for x86_64
   # TODO: make this customizable, but is limited to the way the packages
   # are made available
-  $download_url = "${repo_url}"
+  $download_url = "${repo_url}/v${version}/consul-alerts-${version}-linux-amd64.tar"
   $filename = "consul_latest.tar"
   include ::wget
   exec { 'download_consul_alerts':
