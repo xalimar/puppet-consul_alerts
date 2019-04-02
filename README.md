@@ -14,15 +14,15 @@
 
 This module can install the consul_alerts toolkit to your machine. It supports:
  * Debian Wheezy
- * Ubuntu Precise/Trusty
- * CentOS/RHEL 5 or 6
+ * Ubuntu Xenial/Bionic
+ * CentOS/RHEL 7
 
 More information about consul-alerts is on their github repo:
 https://github.com/AcalephStorage/consul-alerts
 
 ## Module Description
 
-This module installs a consul-alerts binary and configures a basic upstart init script for it.
+This module installs a consul-alerts binary and configures a basic systemd service for it.
 Will keep updated version as you install new versions of the consul-alerts binary.
 
 ## Setup
