@@ -10,7 +10,7 @@ After=basic.target network.target
 [Service]
 User=<%= @user %>
 Group=<%= @group %>
-ExecStart=/usr/local/bin/consul-alerts start --alert-addr=<%= @alert_addr %> --consul-addr=<%= @consul_url %> --consul-dc=<%= @data_center %> <% if @watch_events -%>--watch-events<% end -%> <% if @watch_checks -%>--watch-checks<% end -%> 
+ExecStart=<%= @binary_path %>/consul-alerts start --alert-addr=<%= @alert_addr %> --consul-addr=<%= @consul_url %> --consul-dc=<%= @data_center %> <% if @watch_events -%>--watch-events<% end -%> <% if @watch_checks -%>--watch-checks<% end -%> 
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 Restart=on-failure

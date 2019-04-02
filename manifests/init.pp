@@ -15,8 +15,6 @@
 #   A string containing the release version to install
 # [*repo_url*]
 #   Default repository URL from which to download the binary release
-# [*arch*]
-#   Server architecture version amd64/i386
 # [*default_url*]
 #   Use the default repository and download url either true or false (bool)
 # [*custom_url*]
@@ -52,7 +50,6 @@ class consul_alerts (
   $binary_path  = '/usr/local/bin',
   $version      = '0.5.0',
   $repo_url     = 'https://github.com/AcalephStorage/consul-alerts/releases/download',
-  $arch         = $::architecture,
   $alert_addr   = '127.0.0.1:9000',
   $consul_url   = '127.0.0.1:8500',
   $data_center  = 'dc1',
@@ -67,32 +64,24 @@ class consul_alerts (
   validate_absolute_path($binary_path)
   validate_string($version)
   validate_string($repo_url)
-  validate_string($arch)
   validate_string($alert_addr)
   validate_string($consul_url)
   validate_string($data_center)
   validate_string($user)
   validate_string($group)
 
-  # As the link stores the lates without concern for version I am not
-  # using the value at this time. default provided is for x86_64
-  # TODO: make this customizable, but is limited to the way the packages
-  # are made available
-  $download_url = "${repo_url}/v${version}/consul-alerts-${version}-linux-amd64.tar"
-  $filename = "consul_latest.tar"
-  include ::wget
-  exec { 'download_consul_alerts':
-    command => "wget -q --no-check-certificate ${download_url} -O /var/tmp/${filename}",
-    path    => '/usr/bin:/usr/local/bin:/bin',
-    unless  => "test -s /var/tmp/${filename}",
-    notify  => Exec['extract_consul_alerts'],
-  }
+  $filename = "consul-alerts-${version}-linux-amd64.tar"
+  $download_url = "${repo_url}/v${version}/${filename}"
+  include ::archive
 
-  exec { 'extract_consul_alerts':
-    command => "tar -xf /var/tmp/${filename}",
-    cwd     => $binary_path,
-    path    => ['/bin', '/sbin', '/usr/bin', '/usr/sbin'],
-    notify  => Service['consul-alerts.service'],
+  archive { $filename:
+    path         => "/tmp/${filename}",
+    extract      => true,
+    extract_path => $binary_path,
+    source       => $download_url,
+    creates      => "${binary_path}/consul-alerts",
+    cleanup      => true,
+    notify       => Service['consul-alerts.service'],
   }
 
   #Define present/absent as true/false. Still don't understand why this isn't a builtin.
@@ -108,11 +97,7 @@ class consul_alerts (
   }
 
   service { 'consul-alerts.service':
-    ensure  => $enabled,
-    enable  => $enabled,
-    require => [
-      Exec['extract_consul_alerts'],
-      File['/etc/systemd/system/consul-alerts.service'],
-    ],
+    ensure => $enabled,
+    enable => $enabled,
   }
 }
