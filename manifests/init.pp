@@ -52,7 +52,7 @@ class consul_alerts (
   $binary_path  = '/usr/local/bin',
   $version      = '0.5.0',
   $repo_url     = 'https://github.com/AcalephStorage/consul-alerts/releases/download',
-  $arch         = $::achitecture,
+  $arch         = $::architecture,
   $alert_addr   = '127.0.0.1:9000',
   $consul_url   = '127.0.0.1:8500',
   $data_center  = 'dc1',
